@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>比較政府與政治｜第5週 互動式助教課網頁（精簡版）</title>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .party-token { position: absolute; cursor: grab; user-select: none; touch-action: none; }
+    .party-token:active { cursor: grabbing; }
+    .token-dot { width: 14px; height: 14px; border-radius: 9999px; display: inline-block; }
+    .focus-ring { outline: 2px solid transparent; outline-offset: 2px; }
+    .focus-ring:focus { outline: 2px solid #6366f1; outline-offset: 2px; }
+    .backdrop-blur { backdrop-filter: blur(6px); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <!-- 導覽（僅保留兩區） -->
+  <header class="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-slate-200">
+    <nav class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between" aria-label="主導覽">
+      <a href="#top" class="font-bold text-slate-800">第5週｜精簡版</a>
+      <ul class="hidden md:flex items-center gap-5 text-sm">
+        <li><a class="hover:text-indigo-600" href="#pre-class">課前提問</a></li>
+        <li><a class="hover:text-indigo-600" href="#spectrum">光譜遊戲</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="top" class="max-w-6xl mx-auto px-4 py-8">
+    <!-- Hero 簡述 -->
+    <section class="mb-10">
+      <h1 class="text-3xl md:text-4xl font-extrabold leading-tight">第5週｜英國兩黨政治：拉鋸、調適，或終局？（精簡版）</h1>
+      <p class="mt-2 text-slate-700">本頁僅保留兩個互動功能：<strong>課前提問</strong>與<strong>政黨光譜遊戲</strong>。所有輸入皆儲存在你的瀏覽器（localStorage）。</p>
+      <div class="mt-4 flex flex-wrap gap-3">
+        <a href="#pre-class" class="px-4 py-2 rounded-xl bg-indigo-600 text-white focus-ring">前往課前提問</a>
+        <a href="#spectrum" class="px-4 py-2 rounded-xl bg-blue-600 text-white focus-ring">前往政黨光譜遊戲</a>
+      </div>
+    </section>
+
+    <!-- 課前提問（保留） -->
+    <section id="pre-class" class="mb-12">
+      <h2 class="text-2xl font-bold mb-3">課前提問</h2>
+      <p class="text-sm text-slate-600 mb-4">說明：下列六題供課前思考與討論。每題均可張貼你的看法（最多300字），資料僅儲存在你的瀏覽器，重新整理後仍保留。</p>
+      <div id="preQ-container" class="grid grid-cols-1 gap-5"></div>
+    </section>
+
+    <!-- 政黨光譜遊戲（保留） -->
+    <section id="spectrum" class="mb-12">
+      <h2 class="text-2xl font-bold mb-2">互動遊戲：英國政黨意識形態光譜</h2>
+      <p class="text-sm text-slate-600 mb-4">說明：將政黨拖拽到你認為合適的位置。可切換軸線。可匯出 JSON 與在本機保存定位與60字理由。</p>
+
+      <div id="spectrum-section" class="section">
+        <div class="text-center mb-6">
+          <h3 class="text-xl font-bold text-gray-900 mb-1">🎯 英國政黨意識形態光譜</h3>
+          <p class="text-gray-600 text-sm">拖拽政黨到你認為合適的位置，探索不同的政治光譜維度</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow border">
+          <div class="mb-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">選擇光譜類型：</label>
+              <select id="spectrum-type" class="border border-gray-300 rounded-lg px-3 py-2">
+                <option value="economic-social">經濟政策 vs 社會政策</option>
+                <option value="left-right">左派 vs 右派</option>
+                <option value="authoritarian-libertarian">威權 vs 自由主義</option>
+              </select>
+            </div>
+            <div class="flex gap-2">
+              <button id="exportJSON" class="px-3 py-2 text-sm rounded-lg bg-slate-800 text-white">匯出座標 JSON</button>
+              <button id="resetBtn" class="px-3 py-2 text-sm rounded-lg bg-blue-600 text-white">重置所有政黨</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- 待放區 -->
+            <div class="lg:col-span-1">
+              <h4 class="text-sm font-semibold text-gray-900 mb-2">🎯 政黨待放區</h4>
+              <div id="party-pool" class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-4 min-h-64 border-2 border-dashed border-blue-300">
+                <p class="text-xs text-gray-600 mb-3 text-center">拖拽政黨到右側光譜圖中</p>
+                <div id="available-parties" class="space-y-2"></div>
+              </div>
+              <p class="text-xs text-slate-500 mt-2">鍵盤可用 Tab 聚焦政黨，方向鍵移動。</p>
+            </div>
+
+            <!-- 光譜圖 -->
+            <div class="lg:col-span-3">
+              <h4 class="text-sm font-semibold text-gray-900 mb-2">📊 政治光譜圖</h4>
+              <div id="spectrum-grid" class="relative bg-gray-50 rounded-lg border-2 border-gray-200" style="height: 500px;" tabindex="0" aria-label="光譜投放區">
+                <div id="axis-labels" class="absolute inset-0 pointer-events-none select-none">
+                  <div id="axis-top" class="absolute top-2 left-1/2 -translate-x-1/2 text-xs font-medium text-gray-600">社會自由主義</div>
+                  <div id="axis-bottom" class="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs font-medium text-gray-600">社會保守主義</div>
+                  <div id="axis-left" class="absolute left-2 top-1/2 -translate-y-1/2 -rotate-90 text-xs font-medium text-gray-600">經濟左派</div>
+                  <div id="axis-right" class="absolute right-2 top-1/2 -translate-y-1/2 rotate-90 text-xs font-medium text-gray-600">經濟右派</div>
+                </div>
+                <div class="absolute top-1/2 left-0 right-0 h-px bg-gray-300"></div>
+                <div class="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300"></div>
+                <div id="parties-container" class="absolute inset-0"></div>
+              </div>
+
+              <!-- 圖例 -->
+              <div class="mt-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-2 text-xs">
+                <div class="flex items-center gap-2"><span class="token-dot bg-red-500"></span><span>Labour</span></div>
+                <div class="flex items-center gap-2"><span class="token-dot bg-blue-500"></span><span>Conservative</span></div>
+                <div class="flex items-center gap-2"><span class="token-dot bg-yellow-500"></span><span>Liberal Democrats</span></div>
+                <div class="flex items-center gap-2"><span class="token-dot bg-green-500"></span><span>Green Party</span></div>
+                <div class="flex items-center gap-2"><span class="token-dot bg-purple-500"></span><span>SNP</span></div>
+                <div class="flex items-center gap-2"><span class="token-dot bg-orange-500"></span><span>Plaid Cymru</span></div>
+                <div class="flex items-center gap-2"><span class="token-dot bg-gray-600"></span><span>Reform UK</span></div>
+                <div class="flex items-center gap-2"><span class="token-dot bg-emerald-600"></span><span>Sinn Féin</span></div>
+              </div>
+
+              <div class="mt-4">
+                <label class="text-sm font-medium">60字理由：</label>
+                <textarea id="spectrum-just" class="mt-1 w-full border rounded-lg p-2 text-sm" rows="3" placeholder="請以指定閱讀的證據，簡述你的定位理由（約60字）"></textarea>
+                <div class="mt-2 flex gap-2">
+                  <button id="saveSpectrum" class="px-3 py-2 text-sm rounded-lg bg-indigo-600 text-white">保存到本機</button>
+                  <button id="clearSpectrum" class="px-3 py-2 text-sm rounded-lg bg-slate-200">清除保存</button>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">資料儲存在瀏覽器 localStorage；更換裝置不會同步。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="py-8 text-center text-xs text-slate-500">本頁面為教學用途（精簡版）。</footer>
+  </main>
+
+  <!-- JS：僅保留課前提問與光譜遊戲功能 -->
+  <script>
+    // ====== localStorage 包裝 ======
+    const store = {
+      get(key, def) { try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; } },
+      set(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+    };
+
+    // ====== 課前提問（6題） ======
+    const preQ = [
+      "文章重點好像主要是著重在選舉結果的分析，並且同時討論了脫歐－選區支持度的變化，和相對多數決不再保證兩黨政治的優勢。但對於改革黨崛起的一大成因，即英國面對的大量移民問題，好像較少有深入分析，此一問題是否才是造成改革黨此次如此成功的根本原因？",
+      "在不調整選制的情況下，改革黨、綠黨與自民黨究竟能否在全國層級變成實質席次與執政影響力，還是多黨化只停留在地方政治與得票率數字上？",
+      "改革黨以及自由民主黨已經在地方選舉上取得勝利，那麼在未來的選舉之中，小黨是否會吸收他們得來不易的政治果實，轉變成為一股不可忽視的勢力，在未來的大選中逆風翻盤呢？假以時日，是否能不是以聯合執政的身分，坐上首相寶座呢？",
+      "我國的台灣民眾黨近年來亦有分化中國國民黨的票源的現象，那麼參照英國經驗，是否在我國也會形成政黨重組的現象呢?",
+      "既然單一選區多數制原先是英國長期維持兩黨制的原因之一，然而現在工黨和保守黨優勢不再，那麼英國是否會改變選舉制度？還是會維持現狀，避免政治變得更複雜？",
+      "單一選區相對多數決過去對於小黨不利，Reform與自由民主黨在地方選舉的勝利是否能複製到國會選舉？還是只能止步於地方選舉？",
+    ];
+
+    function renderNote(note){
+      const div = document.createElement('div');
+      const d = new Date(note.ts);
+      div.className = 'border rounded-lg p-2';
+      div.innerHTML = `<div class="text-xs text-slate-500">${d.toLocaleString()}</div><div>${note.text}</div>`;
+      return div;
+    }
+
+    function renderPreClass() {
+      const wrap = document.getElementById('preQ-container');
+      wrap.innerHTML = '';
+      preQ.forEach((q, idx) => {
+        const key = `preQ_${idx}`;
+        const saved = store.get(key, []);
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl border p-5';
+        card.innerHTML = `
+          <h3 class=\"font-semibold text-slate-900\">課前提問 ${idx+1}</h3>
+          <p class=\"text-sm text-slate-700 mt-1\">${q}</p>
+          <textarea class=\"mt-3 w-full border rounded-lg p-2 text-sm\" rows=\"3\" placeholder=\"最多300字...\" id=\"preIn_${idx}\"></textarea>
+          <div class=\"mt-2 flex gap-2\">\n            <button data-idx=\"${idx}\" class=\"prePost px-3 py-2 text-sm rounded-lg bg-slate-900 text-white\">發布</button>
+            <button data-idx=\"${idx}\" class=\"preClear px-3 py-2 text-sm rounded-lg bg-slate-200\">清空</button>
+          </div>
+          <div id=\"preList_${idx}\" class=\"mt-3 space-y-2 text-sm\"></div>
+        `;
+        wrap.appendChild(card);
+        const list = card.querySelector(`#preList_${idx}`);
+        saved.forEach(t => list.appendChild(renderNote(t)));
+      });
+
+      wrap.querySelectorAll('.prePost').forEach(btn => btn.addEventListener('click', e => {
+        const idx = e.currentTarget.getAttribute('data-idx');
+        const key = `preQ_${idx}`;
+        const ta = document.getElementById(`preIn_${idx}`);
+        const val = (ta.value || '').trim();
+        if (!val) return;
+        const cur = store.get(key, []);
+        const note = { text: val, ts: Date.now() };
+        cur.push(note); store.set(key, cur);
+        const list = document.getElementById(`preList_${idx}`);
+        list.appendChild(renderNote(note));
+        ta.value = '';
+      }));
+      wrap.querySelectorAll('.preClear').forEach(btn => btn.addEventListener('click', e => {
+        const idx = e.currentTarget.getAttribute('data-idx');
+        store.set(`preQ_${idx}`, []);
+        document.getElementById(`preList_${idx}`).innerHTML='';
+      }));
+    }
+
+    // ====== 光譜遊戲 ======
+    const parties = [
+      { id:'lab', name:'Labour', color:'#ef4444' },
+      { id:'con', name:'Conservative', color:'#3b82f6' },
+      { id:'ld',  name:'Liberal Democrats', color:'#f59e0b' },
+      { id:'grn', name:'Green Party', color:'#22c55e' },
+      { id:'snp', name:'SNP', color:'#a855f7' },
+      { id:'pc',  name:'Plaid Cymru', color:'#f97316' },
+      { id:'ref', name:'Reform UK', color:'#4b5563' },
+      { id:'sf',  name:'Sinn Féin', color:'#059669' },
+    ];
+
+    const spectrumGrid = () => document.getElementById('spectrum-grid');
+    const partiesContainer = () => document.getElementById('parties-container');
+
+    function initPool(){
+      const pool = document.getElementById('available-parties');
+      pool.innerHTML = '';
+      parties.forEach(p => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full flex items-center gap-2 border rounded-lg p-2 bg-white focus-ring';
+        btn.setAttribute('data-id', p.id);
+        btn.innerHTML = `<span class=\"token-dot\" style=\"background:${p.color}\"></span><span class=\"text-sm\">${p.name}</span>`;
+        btn.addEventListener('click', () => createOrFocusToken(p.id));
+        pool.appendChild(btn);
+      });
+    }
+
+    function createOrFocusToken(id){
+      let el = document.getElementById(`token-${id}`);
+      if (!el) {
+        el = document.createElement('div');
+        el.id = `token-${id}`;
+        el.className = 'party-token px-2 py-1 rounded-lg border bg-white shadow text-xs';
+        const p = parties.find(x => x.id===id);
+        el.innerHTML = `<span class=\"token-dot\" style=\"background:${p.color}\"></span> <span>${p.name}</span>`;
+        el.style.left = '48%';
+        el.style.top = '48%';
+        el.setAttribute('tabindex','0');
+        el.setAttribute('role','button');
+        el.setAttribute('aria-label', `${p.name} 拖拽 token`);
+        partiesContainer().appendChild(el);
+        makeDraggable(el);
+      }
+      el.focus();
+    }
+
+    function makeDraggable(el){
+      let dragging = false, startX=0, startY=0, startLeft=0, startTop=0;
+      const grid = spectrumGrid();
+      function onPointerDown(e){
+        dragging = true;
+        el.setPointerCapture(e.pointerId);
+        startX = e.clientX; startY = e.clientY;
+        const rect = el.getBoundingClientRect();
+        startLeft = rect.left; startTop = rect.top;
+        e.preventDefault();
+      }
+      function onPointerMove(e){
+        if(!dragging) return;
+        const dx = e.clientX - startX; const dy = e.clientY - startY;
+        const gridRect = grid.getBoundingClientRect();
+        let newLeft = startLeft + dx - gridRect.left;
+        let newTop  = startTop + dy - gridRect.top;
+        newLeft = Math.max(0, Math.min(newLeft, gridRect.width - el.offsetWidth));
+        newTop  = Math.max(0, Math.min(newTop, gridRect.height - el.offsetHeight));
+        el.style.left = (newLeft / gridRect.width * 100) + '%';
+        el.style.top  = (newTop  / gridRect.height* 100) + '%';
+      }
+      function onPointerUp(e){ dragging = false; }
+      el.addEventListener('pointerdown', onPointerDown);
+      el.addEventListener('pointermove', onPointerMove);
+      el.addEventListener('pointerup', onPointerUp);
+
+      el.addEventListener('keydown', (e) => {
+        const step = (e.shiftKey? 3 : 1);
+        const curLeft = parseFloat(el.style.left || '50%');
+        const curTop = parseFloat(el.style.top || '50%');
+        if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+        if(e.key==='ArrowUp') el.style.top = Math.max(0, curTop - step) + '%';
+        if(e.key==='ArrowDown') el.style.top = Math.min(100, curTop + step) + '%';
+        if(e.key==='ArrowLeft') el.style.left = Math.max(0, curLeft - step) + '%';
+        if(e.key==='ArrowRight') el.style.left = Math.min(100, curLeft + step) + '%';
+      });
+    }
+
+    function resetTokens(){ partiesContainer().innerHTML = ''; }
+
+    function exportPositions(){
+      const data = parties.map(p => {
+        const el = document.getElementById(`token-${p.id}`);
+        if(!el) return { id:p.id, name:p.name, placed:false };
+        return { id:p.id, name:p.name, placed:true, left: el.style.left, top: el.style.top };
+      });
+      const text = JSON.stringify(data, null, 2);
+      navigator.clipboard.writeText(text).then(()=>{ alert('已複製 JSON 到剪貼簿'); });
+    }
+
+    function saveSpectrum(){
+      const data = parties.map(p => {
+        const el = document.getElementById(`token-${p.id}`);
+        return { id:p.id, left: el? el.style.left : null, top: el? el.style.top : null };
+      });
+      store.set('spectrum_positions', data);
+      store.set('spectrum_just', document.getElementById('spectrum-just').value || '');
+      alert('已保存到本機');
+    }
+    function loadSpectrum(){
+      const saved = store.get('spectrum_positions', null);
+      const just = store.get('spectrum_just', '');
+      if(saved){
+        resetTokens();
+        saved.forEach(it => {
+          if(it.left!=null && it.top!=null){
+            createOrFocusToken(it.id);
+            const el = document.getElementById(`token-${it.id}`);
+            if(el){ el.style.left = it.left; el.style.top = it.top; }
+          }
+        });
+      }
+      document.getElementById('spectrum-just').value = just;
+    }
+
+    function changeSpectrumLabels(mode){
+      const top = document.getElementById('axis-top');
+      const bottom = document.getElementById('axis-bottom');
+      const left = document.getElementById('axis-left');
+      const right = document.getElementById('axis-right');
+      if(mode==='economic-social'){
+        top.textContent = '社會自由主義'; bottom.textContent='社會保守主義';
+        left.textContent= '經濟左派'; right.textContent = '經濟右派';
+      } else if(mode==='left-right'){
+        top.textContent = '自由主義'; bottom.textContent='保守主義';
+        left.textContent= '左派'; right.textContent = '右派';
+      } else {
+        top.textContent = '自由主義'; bottom.textContent='威權主義';
+        left.textContent= '經濟左派'; right.textContent = '經濟右派';
+      }
+    }
+
+    // 綁定與啟動
+    document.getElementById('spectrum-type').addEventListener('change', (e)=>{ changeSpectrumLabels(e.target.value); });
+    document.getElementById('exportJSON').addEventListener('click', exportPositions);
+    document.getElementById('resetBtn').addEventListener('click', ()=>{ resetTokens(); });
+    document.getElementById('saveSpectrum').addEventListener('click', saveSpectrum);
+    document.getElementById('clearSpectrum').addEventListener('click', ()=>{ store.set('spectrum_positions', null); store.set('spectrum_just',''); alert('已清除保存'); });
+
+    // 啟動
+    renderPreClass();
+    initPool();
+    changeSpectrumLabels(document.getElementById('spectrum-type').value);
+    loadSpectrum();
+  </script>
+</body>
+</html>
